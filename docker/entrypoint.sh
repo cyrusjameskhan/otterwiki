@@ -58,8 +58,8 @@ sed -i "/worker_processes\s/c\worker_processes ${USE_NGINX_WORKER_PROCESSES};" /
 USE_STATIC_URL=${STATIC_URL:-'/static'}
 # Get the absolute path of the static files from the environment variable
 USE_STATIC_PATH=${STATIC_PATH:-'/app/otterwiki/static'}
-# Get the listen port for Nginx, default to 80
-USE_LISTEN_PORT=${LISTEN_PORT:-80}
+# Get the listen port for Nginx, use Railway's PORT if available, otherwise LISTEN_PORT, default to 80
+USE_LISTEN_PORT=${PORT:-${LISTEN_PORT:-80}}
 if [ "${USE_LISTEN_PORT}" != "8080" ]; then
     LISTEN_EXTRA_PORT="listen 8080;"
 fi
