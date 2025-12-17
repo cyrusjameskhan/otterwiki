@@ -4,8 +4,7 @@
 FROM debian:12.11-slim AS compile-stage
 LABEL maintainer="Ralph Thesen <mail@redimp.de>"
 # install python environment
-RUN --mount=type=cache,id=railway-cache:apt-cache,target=/var/cache/apt,sharing=locked \
-    rm /etc/apt/apt.conf.d/docker-clean && \
+RUN rm /etc/apt/apt.conf.d/docker-clean && \
     apt-get update -y && \
     apt-get upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3.11 python3.11-venv \
@@ -14,15 +13,13 @@ RUN --mount=type=cache,id=railway-cache:apt-cache,target=/var/cache/apt,sharing=
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 # upgrade pip and install requirements not in otterwiki
-RUN --mount=type=cache,id=railway-cache:pip-cache,target=/root/.cache \
-    pip install -U pip wheel toml
+RUN pip install -U pip wheel toml
 # copy src files
 COPY pyproject.toml MANIFEST.in README.md LICENSE /src/
 WORKDIR /src
 
 # install requirements
-RUN --mount=type=cache,id=railway-cache:pip-cache,target=/root/.cache \
-    python -c 'import toml; print("\n".join(toml.load("./pyproject.toml")["project"]["dependencies"]));' > requirements.txt && \
+RUN python -c 'import toml; print("\n".join(toml.load("./pyproject.toml")["project"]["dependencies"]));' > requirements.txt && \
     pip install -r requirements.txt
 
 # copy otterwiki source and tests
@@ -36,13 +33,10 @@ RUN pip install .
 #
 FROM compile-stage AS test-stage
 # install git (not needed for compiling)
-RUN --mount=type=cache,id=railway-cache:apt-lists,target=/var/lib/apt/lists,sharing=locked \
-    apt-get update -y && apt-get install -y --no-install-recommends git
+RUN apt-get update -y && apt-get install -y --no-install-recommends git
 # install the dev environment
-RUN --mount=type=cache,id=railway-cache:pip-cache,target=/root/.cache \
-    pip install '.[dev]'
-RUN --mount=type=cache,id=railway-cache:pip-cache,target=/root/.cache \
-    tox
+RUN pip install '.[dev]'
+RUN tox
 # configure tox as default command when the test-stage is executed
 CMD ["tox"]
 #
@@ -58,8 +52,7 @@ ENV PGID=33
 ENV OTTERWIKI_SETTINGS=/app-data/settings.cfg
 ENV OTTERWIKI_REPOSITORY=/app-data/repository
 # install supervisord and python
-RUN --mount=type=cache,id=railway-cache:apt-cache,target=/var/cache/apt,sharing=locked \
-    apt-get -y update && \
+RUN apt-get -y update && \
     apt-get upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     nginx supervisor git \
