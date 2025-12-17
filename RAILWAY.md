@@ -74,10 +74,15 @@ Railway provides persistent storage for the `/app-data` directory. This includes
 - SQLite database (`db.sqlite`)
 - Git repository with all wiki content
 
-**Important**: Make sure to set up a Railway volume for persistent storage:
+**CRITICAL**: You MUST set up a Railway volume for persistent storage before the service will start properly:
+
 1. Go to your project in Railway dashboard
 2. Click "New" → "Volume"
-3. Mount it to `/app-data` in your service settings
+3. Name it (e.g., "otterwiki-data")
+4. In your service settings, go to "Settings" → "Volumes"
+5. Mount the volume to `/app-data`
+
+**Without this volume, the service will fail to start!**
 
 ## First Run
 
@@ -99,6 +104,8 @@ Railway provides persistent storage for the `/app-data` directory. This includes
 
 The application includes a health check endpoint at `/-/healthz`. Railway will use this to monitor the service.
 
+**Note**: The healthcheck timeout has been set to 300 seconds (5 minutes) to allow sufficient time for the application to start, especially on the first deployment when initializing the repository and database.
+
 ### Logs
 
 View logs in Railway dashboard:
@@ -106,6 +113,27 @@ View logs in Railway dashboard:
 2. Click on "Deployments"
 3. Click on the latest deployment
 4. View logs in real-time
+
+### Service Won't Start / Healthcheck Failing
+
+If the service fails to start or the healthcheck keeps failing:
+
+1. **Check Volume Mount**: The most common issue is that `/app-data` volume is not mounted:
+   - Go to your service in Railway dashboard
+   - Click "Settings" → "Volumes"
+   - Ensure a volume is mounted to `/app-data`
+   - If not, create and mount one
+
+2. **Check Logs**: View the deployment logs to see specific error messages:
+   - Go to "Deployments" tab
+   - Click on the failed deployment
+   - Check the logs for errors
+
+3. **First Deployment**: On first deployment, the application needs to:
+   - Initialize the git repository
+   - Create the settings file
+   - Create the database
+   - This can take 1-2 minutes, which is why the healthcheck timeout is set to 5 minutes
 
 ### Database Issues
 
