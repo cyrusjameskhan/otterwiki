@@ -74,7 +74,7 @@ COPY --from=compile-stage /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 # create directories
 RUN mkdir -p /app-data /app/otterwiki
-VOLUME /app-data
+# Note: VOLUME removed for Railway compatibility - use Railway volumes instead
 RUN chown -R www-data:www-data /app-data
 # copy static files for nginx
 COPY otterwiki/static /app/otterwiki/static
